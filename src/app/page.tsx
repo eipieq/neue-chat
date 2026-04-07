@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { Send } from 'lucide-react'
+import { ArrowUp, CircleNotch, Sparkle } from '@phosphor-icons/react'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 
@@ -18,8 +18,7 @@ const LEAD_RE = /<LEAD_CAPTURE>[\s\S]*?<\/LEAD_CAPTURE>/g
 const STARTERS = [
   'What services do you offer?',
   'How much does a website cost?',
-  'Who is on the team?',
-  'Show me some past work',
+  'Show me past work',
   'How do I get started?',
 ]
 
@@ -31,7 +30,6 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
-  const [leadCaptured, setLeadCaptured] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -84,10 +82,6 @@ export default function ChatPage() {
             const parsed = JSON.parse(payload)
             if (parsed.chunk) {
               fullText += parsed.chunk
-              if (/<LEAD_CAPTURE>/.test(fullText) && !leadCaptured) {
-                setLeadCaptured(true)
-                setTimeout(() => setLeadCaptured(false), 5000)
-              }
               setMessages(m => [...m.slice(0, -1), { role: 'assistant', content: fullText }])
             }
           } catch { /* skip */ }
@@ -102,7 +96,7 @@ export default function ChatPage() {
       setStreaming(false)
       textareaRef.current?.focus()
     }
-  }, [messages, streaming, leadCaptured])
+  }, [messages, streaming])
 
   function handleKey(e: React.KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -112,42 +106,51 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-full items-center justify-center p-4">
-      <Card className="w-full max-w-2xl flex flex-col h-[680px]">
+    <div className="min-h-screen w-full bg-gradient-to-b from-muted/40 via-background to-muted/40 flex items-center justify-center p-4 sm:p-6">
+      <Card className="w-full max-w-2xl flex flex-col h-[calc(100vh-2rem)] sm:h-[720px] shadow-2xl shadow-black/5 border-border/60 overflow-hidden gap-0 py-0">
 
-        <CardHeader className="flex flex-row items-center gap-3 space-y-0 pb-3">
-          <Avatar>
-            <AvatarFallback>NW</AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <p className="text-sm font-semibold leading-none">Neue World</p>
-            <p className="text-xs text-muted-foreground mt-1">Digital design & Webflow agency · Dubai</p>
+        {/* Header */}
+        <CardHeader className="flex flex-row items-center gap-3.5 space-y-0 px-6 py-5 bg-card">
+          <div className="relative">
+            <Avatar className="size-10 ring-2 ring-background">
+              <AvatarFallback className="bg-foreground text-background font-semibold text-sm tracking-tight">
+                NW
+              </AvatarFallback>
+            </Avatar>
+            <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-emerald-500 ring-2 ring-card" />
           </div>
-          <Badge variant="secondary" className="gap-1.5">
-            <span className="size-1.5 rounded-full bg-emerald-500" />
+          <div className="flex-1 min-w-0 space-y-1">
+            <p className="text-sm font-semibold leading-none tracking-tight">Neue World</p>
+            <p className="text-xs text-muted-foreground leading-none truncate">
+              Digital design & Webflow agency
+            </p>
+          </div>
+          <Badge variant="secondary" className="font-normal text-[10px] uppercase tracking-wider px-2 py-1">
             Online
           </Badge>
         </CardHeader>
 
         <Separator />
 
-        <CardContent className="flex-1 overflow-hidden p-0">
-          <ScrollArea className="h-full px-4">
+        {/* Messages */}
+        <CardContent className="flex-1 overflow-hidden p-0 bg-muted/20">
+          <ScrollArea className="h-full">
             {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full gap-4 text-center py-12">
-                <div>
-                  <p className="font-semibold">How can we help?</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Ask about our services, team, or past work.
-                  </p>
+              <div className="flex flex-col items-center justify-center h-full text-center px-6 py-16 min-h-[440px]">
+                <div className="size-12 rounded-2xl bg-foreground text-background flex items-center justify-center shadow-lg shadow-foreground/10 mb-5">
+                  <Sparkle weight="fill" className="size-5" />
                 </div>
-                <div className="flex flex-wrap gap-2 justify-center">
+                <p className="text-base font-semibold tracking-tight mb-2">How can we help?</p>
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-sm mb-7">
+                  Ask about our services, team, pricing, or past work — we usually reply in seconds.
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center max-w-md">
                   {STARTERS.map(s => (
                     <Button
                       key={s}
                       variant="outline"
                       size="sm"
-                      className="rounded-full text-xs h-7"
+                      className="rounded-full text-xs font-normal h-8 px-3.5 bg-background hover:bg-accent transition-all"
                       onClick={() => send(s)}
                     >
                       {s}
@@ -156,73 +159,110 @@ export default function ChatPage() {
                 </div>
               </div>
             ) : (
-              <div className="py-4 flex flex-col gap-4">
+              <div className="px-6 pt-6 pb-8 flex flex-col gap-6">
                 {messages.map((msg, i) => (
-                  <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                  <div
+                    key={i}
+                    className={`flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300 ${
+                      msg.role === 'user' ? 'flex-row-reverse' : ''
+                    }`}
+                  >
                     {msg.role === 'assistant' && (
                       <Avatar className="size-7 shrink-0 mt-0.5">
-                        <AvatarFallback className="text-[10px]">NW</AvatarFallback>
+                        <AvatarFallback className="bg-foreground text-background text-[10px] font-semibold">
+                          NW
+                        </AvatarFallback>
                       </Avatar>
                     )}
-                    <div className={`rounded-lg px-3 py-2 text-sm max-w-[80%] ${
-                      msg.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    }`}>
-                      {msg.role === 'user' ? (
-                        <p className="whitespace-pre-wrap">{msg.content}</p>
-                      ) : msg.content === '' && streaming ? (
-                        <span className="flex gap-1 items-center h-4">
+                    <div
+                      className={`px-4 py-3 text-sm leading-relaxed max-w-[82%] shadow-sm [overflow-wrap:anywhere] ${
+                        msg.role === 'user'
+                          ? 'bg-foreground text-background rounded-2xl rounded-tr-md'
+                          : 'bg-card text-card-foreground rounded-2xl rounded-tl-md border border-border/60'
+                      }`}
+                    >
+                      {msg.content === '' && streaming ? (
+                        <span className="flex gap-1 items-center h-5">
                           {[0, 1, 2].map(n => (
                             <span
                               key={n}
-                              className="size-1.5 rounded-full bg-muted-foreground animate-bounce"
+                              className="size-1.5 rounded-full bg-muted-foreground/60 animate-bounce"
                               style={{ animationDelay: `${n * 0.15}s` }}
                             />
                           ))}
                         </span>
+                      ) : msg.role === 'user' ? (
+                        <p className="whitespace-pre-wrap">{clean(msg.content)}</p>
                       ) : (
-                        <div className="prose prose-sm dark:prose-invert max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                        <div
+                          className="space-y-3
+                                     [&_p]:leading-relaxed
+                                     [&_strong]:font-semibold [&_strong]:text-foreground
+                                     [&_em]:italic
+                                     [&_a]:underline [&_a]:underline-offset-2 [&_a]:font-medium [&_a]:text-foreground hover:[&_a]:opacity-70
+                                     [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1
+                                     [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:space-y-1
+                                     [&_li]:leading-relaxed
+                                     [&_code]:font-mono [&_code]:text-[12px] [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded
+                                     [&_h1]:text-base [&_h1]:font-semibold [&_h1]:tracking-tight
+                                     [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:tracking-tight
+                                     [&_h3]:text-sm [&_h3]:font-semibold"
+                        >
                           <ReactMarkdown>{clean(msg.content)}</ReactMarkdown>
                         </div>
                       )}
                     </div>
                   </div>
                 ))}
-                <div ref={bottomRef} />
+                <div ref={bottomRef} className="h-px" />
               </div>
             )}
           </ScrollArea>
         </CardContent>
 
-        {leadCaptured && (
-          <p className="text-xs text-emerald-600 dark:text-emerald-400 text-center py-1">
-            ✓ Lead captured
-          </p>
-        )}
-
         <Separator />
 
-        <CardFooter className="pt-3 gap-2">
-          <Textarea
-            ref={textareaRef}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={handleKey}
-            placeholder="Ask anything…"
-            disabled={streaming}
-            rows={1}
-            className="resize-none min-h-9 max-h-32 overflow-y-auto"
-            autoFocus
-          />
-          <Button
-            size="icon"
-            onClick={() => send(input)}
-            disabled={streaming || !input.trim()}
-            className="shrink-0"
+        {/* Input */}
+        <CardFooter className="p-4 bg-card">
+          <div
+            className="group w-full rounded-2xl border border-border/60 bg-muted/30 shadow-sm transition-all
+                       focus-within:bg-background focus-within:border-foreground/20
+                       focus-within:ring-4 focus-within:ring-foreground/5
+                       hover:border-border"
           >
-            <Send className="size-4" />
-          </Button>
+            <Textarea
+              ref={textareaRef}
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKey}
+              placeholder="Message Neue World…"
+              disabled={streaming}
+              rows={1}
+              className="resize-none min-h-[52px] max-h-40 px-4 pt-3.5 pb-2 text-[15px] leading-relaxed
+                         border-0 bg-transparent shadow-none rounded-2xl
+                         focus-visible:ring-0 focus-visible:ring-offset-0
+                         placeholder:text-muted-foreground/60"
+              autoFocus
+            />
+            <div className="flex items-center justify-end px-2 pb-2">
+              <Button
+                size="icon"
+                onClick={() => send(input)}
+                disabled={streaming || !input.trim()}
+                className="size-8 rounded-lg transition-all
+                           disabled:opacity-30
+                           enabled:shadow-md enabled:shadow-foreground/10
+                           enabled:hover:scale-105 active:scale-95"
+                aria-label="Send message"
+              >
+                {streaming ? (
+                  <CircleNotch className="size-4 animate-spin" weight="bold" />
+                ) : (
+                  <ArrowUp className="size-4" weight="bold" />
+                )}
+              </Button>
+            </div>
+          </div>
         </CardFooter>
 
       </Card>

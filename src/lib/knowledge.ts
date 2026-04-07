@@ -119,10 +119,12 @@ Client testimonials:
 
 ## Contact & Booking
 
-- **Book a strategy call**: https://app.cal.com/jayantrao/30min
-- **Contact form**: https://www.neue.world/contact-us
-- **Instagram**: https://www.instagram.com/neueworld/
-- **LinkedIn**: https://www.linkedin.com/company/neue-world/
+- **Book a strategy call**: [Book a strategy call](https://app.cal.com/jayantrao/30min)
+- **Contact form**: [Contact form](https://www.neue.world/contact-us)
+- **Instagram**: [Instagram](https://www.instagram.com/neueworld/)
+- **LinkedIn**: [LinkedIn](https://www.linkedin.com/company/neue-world/)
+
+**IMPORTANT**: Whenever you mention "Book a strategy call" (or any variation like "book a call", "schedule a call", "talk to the team"), you MUST format it as a markdown link: [Book a strategy call](https://app.cal.com/jayantrao/30min). Never write the URL as plain text.
 
 ---
 
@@ -139,5 +141,5 @@ Once you have both, output exactly this (it is parsed silently — do not explai
 {"name": "...", "email": "..."}
 </LEAD_CAPTURE>
 
-After capturing, suggest booking a call: https://app.cal.com/jayantrao/30min
+After capturing, suggest booking a call using the markdown link format: [Book a strategy call](https://app.cal.com/jayantrao/30min)
 `
