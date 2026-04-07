@@ -1,36 +1,119 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Neue World Chat
 
-## Getting Started
+A conversational AI chat assistant for the Neue World agency website. Visitors can ask about services, the team, pricing, and past work — and the assistant captures qualified leads silently along the way.
 
-First, run the development server:
+Built with Next.js 16, OpenAI streaming, and shadcn/ui. Ships as both a hosted page and an embeddable widget for Webflow.
+
+## Features
+
+- **Streaming chat** — token-by-token responses via OpenAI `gpt-4o-mini` over SSE
+- **Strict guardrails** — only answers questions about Neue World, design, Webflow, and the agency's services
+- **Per-session token limit** — each visitor capped at ~4,000 tokens, then prompted to book a strategy call
+- **Silent lead capture** — the model emits a hidden `<LEAD_CAPTURE>` tag with name + email when buying intent is detected
+- **Markdown rendering** — bold, italic, lists, and underlined links in assistant replies
+- **Embeddable widget** — single `<script>` tag drops a floating chat button onto any site (built for Webflow)
+
+## Stack
+
+| Layer | Tool |
+|-------|------|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS v4 |
+| Components | shadcn/ui (Base UI primitives) |
+| Icons | Phosphor Icons |
+| Markdown | react-markdown |
+| AI | OpenAI SDK (`gpt-4o-mini`, streaming) |
+| Hosting | Vercel |
+
+## Getting started
 
 ```bash
+npm install
+cp .env.example .env.local   # then add your OPENAI_API_KEY
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open <http://localhost:3000>.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `OPENAI_API_KEY` | Yes | OpenAI API key for chat completions |
+| `AIRTABLE_API_KEY` | No | Optional — for lead storage in Airtable |
+| `AIRTABLE_BASE_ID` | No | Airtable base ID |
+| `AIRTABLE_TABLE_NAME` | No | Airtable table name (default: `Leads`) |
+| `GOOGLE_SHEETS_ID` | No | Optional — alternative lead storage in Google Sheets |
+| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | No | Service account email |
+| `GOOGLE_SERVICE_ACCOUNT_KEY` | No | Service account private key |
 
-## Learn More
+## Project structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/
+│   ├── api/
+│   │   ├── chat/route.ts      # Streaming chat endpoint (SSE)
+│   │   └── lead/route.ts      # Lead save endpoint
+│   ├── globals.css            # Tailwind + shadcn theme tokens
+│   ├── layout.tsx             # Root layout (Geist fonts)
+│   └── page.tsx               # Chat UI
+├── components/ui/             # shadcn components
+└── lib/
+    ├── knowledge.ts           # System prompt & knowledge base
+    ├── leads.ts               # Lead storage adapters
+    └── utils.ts               # cn() utility
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+public/
+└── widget.js                  # Embeddable chat widget for Webflow
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Embedding the widget
 
-## Deploy on Vercel
+Drop this snippet into the **Footer Code** of any Webflow project (Project Settings → Custom Code):
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```html
+<script src="https://your-vercel-url.vercel.app/widget.js"
+        data-api="https://your-vercel-url.vercel.app"></script>
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The widget renders a floating chat button bottom-right and opens a panel on click. It enforces the same token limit client-side and falls back to the strategy-call CTA when reached.
+
+## Customising the assistant
+
+Edit `src/lib/knowledge.ts` to update:
+
+- Tone, voice, and response style
+- Topic guardrails (what the assistant will and won't answer)
+- Services, pricing, team bios, case studies
+- Lead capture instructions
+- Contact links
+
+The full system prompt is rebuilt on every request — no caching, so changes take effect immediately on save.
+
+## Lead capture
+
+The model is instructed to silently emit a hidden tag whenever it captures a name and email:
+
+```
+<LEAD_CAPTURE>
+{"name": "Alex Doe", "email": "alex@example.com"}
+</LEAD_CAPTURE>
+```
+
+The server parses and strips this tag from the response (it's never shown to the visitor) and forwards the lead to `saveLead()` in `src/lib/leads.ts`. Default behaviour is `console.log` — wire up Airtable or Google Sheets in that file when ready.
+
+## Deploy
+
+Push to `main` and Vercel auto-deploys.
+
+```bash
+git push
+```
+
+Set `OPENAI_API_KEY` in **Project Settings → Environment Variables** before the first deploy.
+
+## License
+
+Private — Neue World © 2026
