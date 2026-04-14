@@ -65,7 +65,7 @@ export async function POST(req: Request) {
         if (match) {
           try {
             const lead = JSON.parse(match[1])
-            if (lead.email) saveLead({ ...lead, sessionId })
+            if (lead.email) saveLead({ ...lead, source: lead.source || 'Intent', sessionId })
           } catch { /* malformed JSON */ }
         }
 
