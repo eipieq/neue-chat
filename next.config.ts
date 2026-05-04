@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Content-Security-Policy",
-            value: "frame-ancestors 'self' https://*.webflow.io https://neueworld.com https://*.neueworld.com https://*.ondigitalocean.app",
+            value: "frame-ancestors 'self' https://*.webflow.io https://neueworld.com https://*.neueworld.com https://neue.world https://*.neue.world https://*.ondigitalocean.app",
           },
         ],
       },
